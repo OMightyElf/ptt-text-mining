@@ -1,74 +1,87 @@
 class ChartsController < ApplicationController
-  before_action :set_chart, only: [:show, :edit, :update, :destroy]
-
+  include ChartUtils
+  helper_method :color_set
   # GET /charts
   # GET /charts.json
   def index
     @charts = Chart.all
+    json_file = Dir["app/assets/jsons/*.json"]
+
+    data = []
+    date_hash = []
+
+    # binding.pry
+    json_file.each_with_index do |json, i|
+      _parsed_file = JSON.parse(File.read(json))
+      word_counts = _parsed_file.sort_by{ |k,v| k }.last(100).to_h
+      date_hash << word_counts.keys
+
+      line_data = Hash.new
+      line_data[:label] = json.gsub('_parsed.json', '').gsub('app/assets/jsons/', '') # 檔名
+      line_data[:backgroundColor] = "rgba(0,0,0,0)"
+      line_data[:pointBackgroundColor] = color_set(alpha: 1)[i]
+      line_data[:borderColor] = color_set(alpha: 1)[i]
+      line_data[:pointBorderColor] = "#fff"
+      line_data[:pointHighlightFill] = "#fff"
+      line_data[:highlightBackgroundColor] = color_set(alpha: 0.2)[i]
+      line_data[:pointHighlightStroke] = color_set(alpha: 1)[i]
+      line_data[:hoverBackgroundColor] = color_set(alpha: 0.2)[i]
+      line_data[:borderWidth] = 2
+      line_data[:data] = word_counts.values
+      # binding.pry
+      # binding.pry
+      data.push(line_data)
+    end
+
+    # binding.pry
+
+    @data = {
+      labels: date_hash.flatten.uniq,
+      datasets: data
+    }
+      # binding.pry
+
+    @options = {
+      responsive: true,
+      height: 240,
+      legend: {
+        display: true,
+        width: 20
+      }
+    }
   end
 
   # GET /charts/1
   # GET /charts/1.json
   def show
+    filename = params[:id]
+    json_file = Dir["app/assets/jsons/#{filename}_parsed.json"][0]
+    parsed_file = JSON.parse(File.read(json_file))
+    date_hash = parsed_file.keys.sort
+    word_counts = parsed_file.sort_by{ |k,v| k }.to_h
+
+    # binding.pry
+
+    @data = {
+      labels: word_counts.keys,
+      datasets: [
+        {
+          label: filename,
+          backgroundColor: "rgba(220,220,220,0.2)",
+          borderColor: "rgba(220,220,220,1)",
+          data: word_counts.values
+        }
+      ]
+    }
+
+    @options = {
+      responsive: true,
+      height: 240,
+      legend: {
+        display: true,
+        width: 20
+      }
+    }
   end
 
-  # GET /charts/new
-  def new
-    @chart = Chart.new
-  end
-
-  # GET /charts/1/edit
-  def edit
-  end
-
-  # POST /charts
-  # POST /charts.json
-  def create
-    @chart = Chart.new(chart_params)
-
-    respond_to do |format|
-      if @chart.save
-        format.html { redirect_to @chart, notice: 'Chart was successfully created.' }
-        format.json { render :show, status: :created, location: @chart }
-      else
-        format.html { render :new }
-        format.json { render json: @chart.errors, status: :unprocessable_entity }
-      end
-    end
-  end
-
-  # PATCH/PUT /charts/1
-  # PATCH/PUT /charts/1.json
-  def update
-    respond_to do |format|
-      if @chart.update(chart_params)
-        format.html { redirect_to @chart, notice: 'Chart was successfully updated.' }
-        format.json { render :show, status: :ok, location: @chart }
-      else
-        format.html { render :edit }
-        format.json { render json: @chart.errors, status: :unprocessable_entity }
-      end
-    end
-  end
-
-  # DELETE /charts/1
-  # DELETE /charts/1.json
-  def destroy
-    @chart.destroy
-    respond_to do |format|
-      format.html { redirect_to charts_url, notice: 'Chart was successfully destroyed.' }
-      format.json { head :no_content }
-    end
-  end
-
-  private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_chart
-      @chart = Chart.find(params[:id])
-    end
-
-    # Never trust parameters from the scary internet, only allow the white list through.
-    def chart_params
-      params.fetch(:chart, {})
-    end
 end

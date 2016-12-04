@@ -1,25 +1,8 @@
-<p id="notice"><%= notice %></p>
+<%= image_tag "1.jpg" %>
+<%= image_tag "2.svg" %>
+<%= image_tag "3.svg" %>
+<%= image_tag "4.svg" %>
+<%= image_tag "5.svg" %>
+<%= image_tag "6.svg" %>
 
-<h1>Listing Charts</h1>
-
-<table>
-  <thead>
-    <tr>
-      <th colspan="3"></th>
-    </tr>
-  </thead>
-
-  <tbody>
-    <% @charts.each do |chart| %>
-      <tr>
-        <td><%= link_to 'Show', chart %></td>
-        <td><%= link_to 'Edit', edit_chart_path(chart) %></td>
-        <td><%= link_to 'Destroy', chart, method: :delete, data: { confirm: 'Are you sure?' } %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
-
-<br>
-
-<%= link_to 'New Chart', new_chart_path %>
+<%= line_chart @data, @options %>
